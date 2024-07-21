@@ -30,6 +30,8 @@ class UserError(Exception):
     pass
 
 #----------------------------------------------------------------------------
+import torchvision.transforms as transforms
+from torch.utils.data import DataLoader
 
 def setup_training_loop_kwargs(
     # General options (not included in desc).
