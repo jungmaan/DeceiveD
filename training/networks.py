@@ -1,4 +1,4 @@
-﻿# Copyright (c) 2021, NVIDIA CORPORATION.  All rights reserved.
+# Copyright (c) 2021, NVIDIA CORPORATION.  All rights reserved.
 #
 # NVIDIA CORPORATION and its licensors retain all intellectual property
 # and proprietary rights in and to this software, related documentation
@@ -38,10 +38,17 @@ def modulated_conv2d(
     fused_modconv   = True,     # Perform modulation, convolution, and demodulation as a single fused operation?
 ):
     batch_size = x.shape[0]
+    
+    if batch_size == 0:
+        raise ValueError("The 'batch_size' is 0.")
+    
     out_channels, in_channels, kh, kw = weight.shape
     misc.assert_shape(weight, [out_channels, in_channels, kh, kw]) # [OIkk]
     misc.assert_shape(x, [batch_size, in_channels, None, None]) # [NIHW]
     misc.assert_shape(styles, [batch_size, in_channels]) # [NI]
+    
+    if styles.numel() == 0:
+        raise ValueError("The 'styles' tensor is empty.")
 
     # Pre-normalize inputs to avoid FP16 overflow.
     if x.dtype == torch.float16 and demodulate:
@@ -98,7 +105,7 @@ class FullyConnectedLayer(torch.nn.Module):
         super().__init__()
         self.activation = activation
         self.weight = torch.nn.Parameter(torch.randn([out_features, in_features]) / lr_multiplier)
-        self.bias = torch.nn.Parameter(torch.full([out_features], np.float32(bias_init))) if bias else None
+        self.bias = torch.nn.Parameter(torch.full([out_features], float(bias_init))) if bias else None
         self.weight_gain = lr_multiplier / np.sqrt(in_features)
         self.bias_gain = lr_multiplier
 
