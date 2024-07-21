@@ -140,6 +140,16 @@ def setup_training_loop_kwargs(
     if mirror:
         desc += '-mirror'
         args.training_set_kwargs.xflip = True
+        
+      # Data loader 생성
+    transform = transforms.Compose([
+        transforms.Resize((256, 256)),
+        transforms.ToTensor(),
+    ])
+    dataset = CustomDataset(args.training_set_kwargs.path, transform=transform)
+    batch_size = batch if batch is not None else 4  # 기본 배치 크기 설정
+    dataloader = DataLoader(dataset, batch_size=batch_size, shuffle=True)
+    args.training_set_kwargs.dataloader = dataloader    
 
     # ----------------------------
     # Metrics: metrics, metricdata
@@ -411,6 +421,9 @@ def subprocess_fn(rank, args, temp_dir):
     training_stats.init_multiprocessing(rank=rank, sync_device=sync_device)
     if rank != 0:
         custom_ops.verbosity = 'none'
+        
+    # 데이터 로더 가져오기
+    dataloader = args.training_set_kwargs.dataloader    
 
     # Execute training loop.
     training_loop.training_loop(rank=rank, **args)
