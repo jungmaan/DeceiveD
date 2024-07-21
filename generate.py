@@ -122,28 +122,7 @@ def generate_images(
         img = (img.permute(0, 2, 3, 1) * 127.5 + 128).clamp(0, 255).to(torch.uint8)
         PIL.Image.fromarray(img[0].cpu().numpy(), 'RGB').save(f'{outdir}/seed{seed:04d}.png')
 
-        # Logit 기반 측정
-        real_data = torch.randn_like(img).to(device)  # 실제 데이터 예시
-        D_real = D(real_data)
-        D_fake = D(img)
-
-        # Logit 기반 측정 (λr 예시)
-        lambda_r = torch.mean(torch.sign(D_real)).item()
-
-        # 적응형 속임수 확률 조정
-        t = 0.6  # 임계값
-        p = 0  # 초기 속임수 확률
-
-        if lambda_r > t:
-            p = min(1.0, p + 0.01)  # p를 증가
-        else:
-            p = max(0.0, p - 0.01)  # p를 감소
-
-        # p 확률로 가짜 데이터를 진짜 데이터로 속이기
-        if torch.rand(1).item() < p:
-            augmented_data = torch.cat([real_data, img], dim=0)
-        else:
-            augmented_data = real_data
+    
 
 
 #----------------------------------------------------------------------------
